@@ -9,10 +9,22 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 
-import login_data
-
 BASE_DIR = os.getcwd()
 UTC_OFFSET = 3  # hours
+
+driver_filepath = os.path.join(BASE_DIR, "chromedriver", "chromedriver.exe")
+
+
+def get_driver() -> webdriver.Chrome:
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--no-sandbox")
+    return webdriver.Chrome(
+        service=Service(os.environ.get("CHROMEDRIVER_PATH")),
+        chrome_options=chrome_options,
+    )
 
 
 def get_photos():
@@ -52,14 +64,13 @@ def close_driver(driver: webdriver.Chrome):
 
 
 def main():
-    driver_filepath = os.path.join(BASE_DIR, "chromedriver", "chromedriver.exe")
     try:
         photos = get_photos()
         photo_i = get_nearest_photo_index(photos)
         while True:
             photo = photos[photo_i]
             photo.wait_to_next_call()
-            driver = webdriver.Chrome(service=Service(driver_filepath))
+            driver = get_driver()
             driver.get("https://vk.com")
             auth(driver)
             photo.set_photo(driver)
@@ -93,8 +104,8 @@ def auth(driver: webdriver.Chrome):
         login_field = driver.find_element(By.CSS_SELECTOR, "input#index_email")
         password_field = driver.find_element(By.CSS_SELECTOR, "input#index_pass")
         submit_button = driver.find_element(By.CSS_SELECTOR, "button#index_login_button")
-        login_field.send_keys(login_data.LOGIN)
-        password_field.send_keys(login_data.PASSWORD)
+        login_field.send_keys(os.environ.get("LOGIN"))
+        password_field.send_keys(os.environ.get("PASSWORD"))
         submit_button.click()
 
     second_to_wait = 5  # to wait for logging
