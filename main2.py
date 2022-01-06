@@ -28,7 +28,12 @@ def get_photos():
             time_arr = time_str.split(":")
             if len(time_arr) > 3 or len(time_arr) < 1:
                 raise ValueError(f"Incorrect time \"{time_str}\" on line {line_number}")
-            seconds = int(time_arr[0]) * 3600 + int(time_arr[1]) * 60
+            seconds = int(time_arr[0]) * 3600
+            try:
+                seconds += int(time_arr[1]) * 60
+                seconds += int(time_arr[2])
+            except IndexError:
+                pass
             photos.append(PlannedPhoto(seconds, link))
     photos.sort(key=lambda x: x.time)
     return photos
@@ -87,8 +92,10 @@ def auth(driver: webdriver.Chrome):
     if driver.current_url.split("/")[-1] != "feed":  # if not logged
         login_field = driver.find_element(By.CSS_SELECTOR, "input#index_email")
         password_field = driver.find_element(By.CSS_SELECTOR, "input#index_pass")
+        submit_button = driver.find_element(By.CSS_SELECTOR, "button#index_login_button")
         login_field.send_keys(login_data.LOGIN)
         password_field.send_keys(login_data.PASSWORD)
+        submit_button.click()
 
     second_to_wait = 5  # to wait for logging
     sleep_time = 0.1  # time between checks
@@ -129,7 +136,7 @@ class PlannedPhoto:
         time.sleep(self.time_to_next_call())
 
     @staticmethod
-    def __try_execute(func, *args, time_wait=0.1, timeout=2):
+    def __try_execute(func, *args, time_wait=0.1, timeout=5):
         time_waited = 0
         while True:
             if time_waited >= timeout:
@@ -173,7 +180,10 @@ class PlannedPhoto:
 
         self.__try_execute(final_window_handler, driver)
 
-        time.sleep(1)
+        def check_if_photo_was_uploaded(driver: webdriver.Chrome):
+            notification = driver.find_element(By.CSS_SELECTOR, "div.notifier_baloon_msg.wrapped")
+
+        self.__try_execute(check_if_photo_was_uploaded, driver)
 
 
 def get_nearest_photo_index(photos: List[PlannedPhoto]):
