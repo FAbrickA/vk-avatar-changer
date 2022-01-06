@@ -93,6 +93,7 @@ def auth(driver: webdriver.Chrome):
         os.mkdir(cookie_folder)
     cookie_filepath = os.path.join(cookie_folder, 'cookies.cookie')
     if os.path.exists(cookie_filepath):
+        print("Cookies used")
         with open(cookie_filepath, 'rb') as cookie_file:
             cookies = pickle.load(cookie_file)
         for cookie in cookies:
